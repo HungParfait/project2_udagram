@@ -45,7 +45,7 @@ function isValidUrl(string: string): boolean {
     res.send("try GET /filteredimage?image_url={{}}");
   });
 
-  app.get("/filteredimage", async (req: express.Request, res: express.Response) => {
+  app.get("/filteredimage", async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       const { image_url } = req.query;
 
@@ -61,11 +61,15 @@ function isValidUrl(string: string): boolean {
 
       res.sendFile(fileLocation, async () => await deleteLocalFiles([fileLocation]));
     } catch (err) {
-      if (err instanceof Error && err.message === "Invalid URL.") {
-        res.status(400).json({ message: err.message });
-      } else {
-        res.status(500).json({ message: err });
-      }
+      next(err);
+    }
+  });
+
+  app.use((err: Error, req: express.Request, res: express.Response) => {
+    if (err.message === "Invalid URL.") {
+      res.status(400).json({ message: err.message });
+    } else {
+      res.status(500).json({ message: err.message });
     }
   });
 
